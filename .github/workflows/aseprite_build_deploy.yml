@@ -21,6 +21,7 @@ jobs:
       latest_tag: ${{ steps.version_info.outputs.latest_tag }}
       should_build: ${{ steps.should_build.outputs.should_build }}
       upload_url: ${{ steps.create_release.outputs.upload_url }}
+
     steps:
       - name: Get latest version info
         id: version_info
@@ -60,42 +61,11 @@ jobs:
         with:
           tag_name: ${{ steps.version_info.outputs.latest_tag }}
           release_name: Draft Aseprite ${{ steps.version_info.outputs.latest_tag }}
-          body: |
-            ${{ steps.version_info.outputs.version_info }}
+          body: ${{ steps.version_info.outputs.version_info }}
           draft: true
           prerelease: false
 
   build-aseprite:
     name: Build Aseprite (Windows)
     needs: check-version
-    if: ${{ needs.check-version.outputs.should_build }}
-    runs-on: windows-latest
-
-    steps:
-      - name: Install Ninja
-        uses: seanmiddleditch/gha-setup-ninja@v3
-
-      - name: Remove OpenSSL from PATH
-        shell: powershell
-        run: Remove-Item -Recurse -Force "C:\Program Files\OpenSSL\" -ErrorAction SilentlyContinue
-
-      - name: Get Skia from cache
-        id: skia-cache
-        uses: actions/cache@v3
-        with:
-          path: skia
-          key: skia-windows-cache
-
-      - name: Download Skia if not in cache
-        if: steps.skia-cache.outputs.cache-hit != 'true'
-        run: |
-          curl -o Skia-Windows-Release-x64.zip -L https://github.com/aseprite/skia/releases/download/m124-08a5439a6b/Skia-Windows-Release-x64.zip
-          unzip Skia-Windows-Release-x64.zip -d skia
-
-      - name: Download Aseprite source
-        run: |
-          curl -o Aseprite-source.zip -L ${{ needs.check-version.outputs.download_url }}
-          unzip Aseprite-source.zip -d aseprite
-          mkdir aseprite\build
-
-      - name: Setup Visual Studio
+    if: ${{ needs.check-vers
